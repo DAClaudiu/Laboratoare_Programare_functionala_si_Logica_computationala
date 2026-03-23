@@ -7,6 +7,8 @@ data class Arrow( val Source:World, val Target:World)
 typealias setOfWorld = MutableSet<World>
 typealias setOfArrow = MutableSet<Arrow>
 
+lateinit var Xglobal: setOfWorld
+
 fun <A, B, C> curry(f: Fun2<A, B, C>): (A) -> (B) -> C = { a -> { b -> f(a, b) } }
 
 val refl: Fun2<setOfWorld, setOfArrow, setOfArrow> = { X, R ->
@@ -53,30 +55,32 @@ val tranz: Fun2<setOfWorld, setOfArrow, setOfArrow> = { X, R ->
 
 fun tranzitiva(X: setOfWorld) = curry(tranz)(X)
 
-fun reflSimTranz(X: setOfWorld): Fun<setOfArrow, setOfArrow> {
-    val refl = reflexiva(X)
-    val tranz = tranzitiva(X)
-
-    return { R -> tranz(simetrica(refl(R))) }
+val reflSimTranz: Fun<setOfArrow, setOfArrow> = { R ->
+    tranzitiva(Xglobal)(
+        simetrica(
+            reflexiva(Xglobal)(R)
+        )
+    )
 }
 
 fun main() {
-// 1. Definirea datelor de test
-    val w1 = World(1, 10); val w2 = World(2, 20)
-    val w3 = World(3, 30); val w4 = World(4, 40)
+    val w1 = World(1, 10)
+    val w2 = World(2, 20)
+    val w3 = World(3, 30)
+    val w4 = World(4, 40)
 
     val multime: setOfWorld = mutableSetOf(w1, w2, w3, w4)
-    val relatie: setOfArrow = mutableSetOf(Arrow(w1, w2), Arrow(w2, w3), Arrow(w3, w4))
+    val relatie: setOfArrow = mutableSetOf(
+        Arrow(w1, w2),
+        Arrow(w2, w3),
+        Arrow(w3, w4)
+    )
 
-    // 2. Crearea funcțiilor specializate pentru această mulțime
-    // Acum folosim "fabricile" care aplică curry cu mulțimea corectă
+    Xglobal = multime
+
     val funcReflexiva = reflexiva(multime)
     val funcTranzitiva = tranzitiva(multime)
 
-    // Pentru compunerea finală, folosim funcția care ne returnează pipeline-ul complet
-    val compunereFinala = reflSimTranz(multime)
-
-    // 3. Testarea funcțiilor
     println("Relația inițială: $relatie")
 
     val rReflexiva = funcReflexiva(relatie)
@@ -88,7 +92,6 @@ fun main() {
     val rTranzitiva = funcTranzitiva(relatie)
     println("După tranzitivitate: $rTranzitiva")
 
-    // 4. Testarea compunerii finale
-    val rezultatFinal = compunereFinala(relatie)
+    val rezultatFinal = reflSimTranz(relatie)
     println("Rezultat închidere echivalență: $rezultatFinal")
 }
