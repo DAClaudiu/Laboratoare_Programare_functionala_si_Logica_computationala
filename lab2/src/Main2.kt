@@ -11,6 +11,10 @@ lateinit var Xglobal: setOfWorld
 
 fun <A, B, C> curry(f: Fun2<A, B, C>): (A) -> (B) -> C = { a -> { b -> f(a, b) } }
 
+infix fun <A, B, C> Fun<A, B>.compose(g: Fun<B, C>): Fun<A, C> = { a ->
+    g(this(a))
+}
+
 val refl: Fun2<setOfWorld, setOfArrow, setOfArrow> = { X, R ->
     val result = R.toMutableSet()
     X.forEach { world ->
@@ -40,7 +44,7 @@ val tranz: Fun2<setOfWorld, setOfArrow, setOfArrow> = { X, R ->
             // k este nodul de sfârșit
             for (k in listX) {
 
-                // Verificăm dacă există deja drum i -> j și j -> k
+                // Verifica dacă există deja drum i -> j și j -> k
                 val existsIJ = result.any { it.Source == i && it.Target == j }
                 val existsJK = result.any { it.Source == j && it.Target == k }
 
@@ -55,13 +59,10 @@ val tranz: Fun2<setOfWorld, setOfArrow, setOfArrow> = { X, R ->
 
 fun tranzitiva(X: setOfWorld) = curry(tranz)(X)
 
-val reflSimTranz: Fun<setOfArrow, setOfArrow> = { R ->
-    tranzitiva(Xglobal)(
-        simetrica(
-            reflexiva(Xglobal)(R)
-        )
-    )
-}
+
+
+// val reflSimTranz: Fun<setOfArrow, setOfArrow> =
+    // reflexiva(Xglobal) compose simetrica compose tranzitiva(Xglobal)
 
 fun main() {
     val w1 = World(1, 10)
@@ -81,6 +82,8 @@ fun main() {
     val funcReflexiva = reflexiva(multime)
     val funcTranzitiva = tranzitiva(multime)
 
+
+
     println("Relația inițială: $relatie")
 
     val rReflexiva = funcReflexiva(relatie)
@@ -91,6 +94,12 @@ fun main() {
 
     val rTranzitiva = funcTranzitiva(relatie)
     println("După tranzitivitate: $rTranzitiva")
+
+
+
+    val fReflexivaSimetrica = reflexiva(multime) compose simetrica
+    val reflSimTranz = fReflexivaSimetrica compose tranzitiva(multime)
+
 
     val rezultatFinal = reflSimTranz(relatie)
     println("Rezultat închidere echivalență: $rezultatFinal")
